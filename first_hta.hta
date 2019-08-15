@@ -1,0 +1,239 @@
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>HTAアプリケーション</title>
+	</head>
+	<body>
+		<h1>プレイヤー</h1>
+		<div class="player">
+			<object id="player" classid="CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95" height="44px">
+				<PARAM NAME="FileName" VALUE="" />
+				<param name="AutoStart" value="false" />
+				<param name="ShowPositionControls" value="false" />
+			</object>
+		</div>
+		状態：<span id="status"></span><br>
+		位置：<span id="current_position"></span><br>
+		A地点のずれ：<span id="offset_position"></span><br>
+		<hr>
+		<h1>設定</h1>
+		再生ファイル:<input type="file" id="play_file_select" value=""><input type="hidden" id="play_file" value=""><br>
+		A:<input type="number" step="0.1" id="position_a" value="4.4"><br>
+		B:<input type="number" step="0.1" id="position_b" value="9.62"><br>
+		<label>A地点から再生する<input type="checkbox" id="is_start_position_a" value="yes"></label><br>
+		
+		<br>
+		
+		<input type="button" id="play" value="再生">
+		<hr>
+		<input type="button" id="save" value="設定保存">
+		
+		<script>
+			if (typeof window.console == "undefined") {
+				window.console = {
+					log: function(value) {
+//						alert(value);
+					}
+				}
+			}
+			/*
+			var fs_object = null;
+			try {
+				fs_object = WScript.CreateObject("Scripting.FileSystemObject");
+			} catch (e) {
+				fs_object = new ActiveXObject("Scripting.FileSystemObject");
+			}
+			console.log(fs_object);
+			var stream = fs_object.CreateTextFile("C:\\work\\test.txt", true);
+			stream.Write("hta write");
+			stream.Close();
+			*/
+			
+			// 再生ファイル選択時の処理
+			document.getElementById("play_file_select").onchange = function(){
+				document.getElementById("play_file").value = document.getElementById("play_file_select").value;
+			};
+			
+			var position_controll_interval_id = null;
+			var is_play_start = false;
+			var position_a = null;
+			var position_b = null;
+			
+			// 「再生」ボタン押下時の処理
+			document.getElementById("play").onclick = function(){
+				clearInterval(position_controll_interval_id);
+				document.player.Stop();
+				
+				document.player.FileName = document.getElementById("play_file").value;
+				is_play_start = true;
+			}
+			
+			// 再生位置の監視処理
+			var position_controll = function() {
+				document.getElementById("current_position").innerHTML = document.player.CurrentPosition;
+				
+				if (document.player.CurrentPosition >= position_b) {
+					document.player.CurrentPosition = position_a;
+				}
+			}
+			
+			// 再生ステータスの監視処理
+			var player_status_cehck = function() {
+				var player_status = "不明";
+				var player_status_list = {
+					0: "停止",
+					1: "一時停止",
+					2: "再生"
+				};
+				if (typeof player_status_list[document.player.PlayState] != "undefined") {
+					player_status = player_status_list[document.player.PlayState];
+				}
+				document.getElementById("status").innerHTML = player_status;
+				
+				if (document.player.PlayState != 2) {
+					// 再生中でない場合は再生位置制御の処理を中断する。
+					clearInterval(position_controll_interval_id);
+				}
+			}
+			player_status_cehck();
+			
+			// 「保存」ボタン押下時の処理
+			document.getElementById("save").onclick = function(){
+				var fs_object = null;
+				try {
+					fs_object = WScript.CreateObject("Scripting.FileSystemObject");
+				} catch (e) {
+					try {
+						fs_object = new ActiveXObject("Scripting.FileSystemObject");
+					} catch(e2) {
+						null;
+					}
+				}
+				if (fs_object == null) {
+					alert("保存に失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var stream = null;
+				try {
+					stream = fs_object.CreateTextFile(".\\play_setting.txt", true);
+				} catch (e) {
+					alert("保存に失敗しました。(Error:2)\r\n" + e.description);
+					return false;
+				}
+				
+				stream.WriteLine("player_volume = " + document.player.Volume);
+				stream.WriteLine("");
+				
+				stream.WriteLine("filepath = " + document.player.FileName);
+				stream.WriteLine("position_a = " + document.getElementById("position_a").value);
+				stream.WriteLine("position_b = " + document.getElementById("position_b").value);
+				stream.WriteLine("is_start_position_a = " + (document.getElementById("is_start_position_a").checked ? "yes" : "no"));
+				stream.WriteLine("");
+				
+				stream.Close();
+			}
+			
+			var read_setting_file = function() {
+				var fs_object = null;
+				try {
+					fs_object = WScript.CreateObject("Scripting.FileSystemObject");
+				} catch (e) {
+					try {
+						fs_object = new ActiveXObject("Scripting.FileSystemObject");
+					} catch(e2) {
+						null;
+					}
+				}
+				if (fs_object == null) {
+					alert("設定ファイルの読み込みに失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var stream = null;
+				try {
+					stream = fs_object.OpenTextFile(".\\play_setting.txt");
+				} catch (e) {
+					null;
+				}
+
+				if (stream == null) {
+					return false;
+				}
+				
+				var line = null;
+				var filepath = null;
+				var position_a = null;
+				var position_b = null;
+				var is_start_position_a = null;
+				while (!stream.AtEndOfStream) {
+					line = stream.ReadLine();
+					console.log(line);
+					
+					if (line.indexOf("player_volume = ") == 0) {
+						document.player.Volume = line.substr("player_volume = ".length);
+					} else if (line.indexOf("filepath = ") == 0) {
+						filepath = line.substr("filepath = ".length);
+					} else if (line.indexOf("position_a = ") == 0) {
+						position_a = line.substr("position_a = ".length);
+					} else if (line.indexOf("position_b = ") == 0) {
+						position_b = line.substr("position_b = ".length);
+					} else if (line.indexOf("is_start_position_a = ") == 0) {
+						is_start_position_a = line.substr("is_start_position_a = ".length) == "yes" ? true : false;
+					}
+					
+					if (filepath != null && position_a != null && position_b != null && is_start_position_a != null) {
+						document.player.FileName = filepath;
+						document.getElementById("play_file").value = filepath;
+						document.getElementById("position_a").value = position_a;
+						document.getElementById("position_b").value = position_b;
+						document.getElementById("is_start_position_a").checked = is_start_position_a;
+						
+						filepath = null;
+						position_a = null;
+						position_b = null;
+						is_start_position_a = null;
+					}
+				};
+			}
+			read_setting_file();
+			
+/*			document.getElementById("player").addEventListener("PlayStateChange",function(newState) {
+				console.log("call change");
+			});*/
+
+		</script>
+
+		<script FOR="player" EVENT="PlayStateChange(oldState,newState)" LANGUAGE="Jscript">
+			//console.log("before：" + oldState + " - after" + newState);
+			player_status_cehck();
+			
+			if (is_play_start && newState == 0 && oldState == 3) {
+				// 再生ファイルを変更した場合
+				// document.player.CurrentPosition = document.getElementById("position_a").value;
+				document.player.Play();
+				
+				// なぜか開始位置がずれる。
+				var input_position = parseFloat(document.getElementById("position_a").value);
+				var real_position = parseFloat(document.player.CurrentPosition);
+				console.log("input_position:" + input_position);
+				console.log("real_position:" + real_position);
+				console.log(input_position - real_position);
+				document.getElementById("offset_position").innerHTML = input_position - real_position;
+			} else if (newState == 2) {
+				// 再生開始の場合
+				if (oldState != 1) {
+					position_a = document.getElementById("position_a").value;
+					position_b = document.getElementById("position_b").value;
+					
+					if (document.getElementById("is_start_position_a").checked) {
+						document.player.CurrentPosition = position_a;
+					}
+				}
+				position_controll_interval_id = setInterval(position_controll, 50);
+			} else if (is_play_start) {
+				is_play_start = false;
+			}
+		</script>
+	</body>
+</html>
