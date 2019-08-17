@@ -1,25 +1,178 @@
 <html>
 	<head>
 		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>HTAアプリケーション</title>
+		<style>
+			.float_box:after,
+			.main_area:after {
+				content: "";
+				clear: both;
+				height: 10px;
+				display: block;
+				visibility: hidden;
+			}
+			.float_box,
+			.main_area {
+				zoom: 1;
+			}
+			
+			.float_box .float_left {
+				float:left;
+			}
+			
+			.main_area .player_area {
+				float: left;
+				width: 300px;
+			}
+			
+			.main_area .play_list_area {
+				float: left;
+			}
+			
+			.main_area .play_list_area .play_list {
+				width: 700px;
+				table-layout: fixed;
+				border: solid 1px;
+			}
+			
+			.main_area .play_list_area .play_list th,
+			.main_area .play_list_area .play_list td {
+				border: solid 1px;
+			}
+			
+			.main_area .play_list_area .play_list_template {
+				display: none;
+			}
+			
+			.main_area .play_list_area .delete_area {
+				width: 20px;
+			}
+			
+			.main_area .play_list_area .delete_area .delete_button {
+				color: red;
+				padding: 0;
+				width: 20px;
+				background-color: white;
+			}
+			
+			.main_area .play_list_area .filename_area {
+				
+			}
+			
+			.main_area .play_list_area .position_a_area,
+			.main_area .play_list_area .position_b_area {
+				width: 55px;
+			}
+			
+			.main_area .play_list_area .ab_repeat_num_area {
+				width: 110px;
+			}
+			
+			.main_area .play_list_area .is_start_position_a_area {
+				width: 110px;
+			}
+			
+			.main_area .play_list_area .play_area {
+				width: 50px;
+				text-align: center;
+			}
+			
+			.main_area .play_list_area input[type=number] {
+				width: 90%;
+				text-align: right;
+				display: block;
+			}
+			
+			.main_area .play_list_area .check_area {
+				text-align: center;
+			}
+			
+			.main_area .play_list_area .check_area label {
+				display: block;
+				width: 100%;
+			}
+			
+			
+			
+			
+		</style>
 	</head>
 	<body>
 		<h1>プレイヤー</h1>
-		<div class="player">
-			<object id="player" classid="CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95" height="44px">
-				<PARAM NAME="FileName" VALUE="" />
-				<param name="AutoStart" value="false" />
-				<param name="ShowPositionControls" value="false" />
-			</object>
+		<div class="main_area">
+			<div class="player_area">
+				<object id="player" classid="CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95" height="44px">
+					<PARAM NAME="FileName" VALUE="" />
+					<param name="AutoStart" value="false" />
+					<param name="ShowPositionControls" value="false" />
+				</object>
+			</div>
+			<div class="play_list_area">
+				<table class="play_list">
+					<thead>
+						<tr>
+							<th class="delete_area"></th>
+							<th class="filename_area">ファイル名</th>
+							<th class="position_a_area">A地点</th>
+							<th class="position_b_area">B地点</th>
+							<th class="ab_repeat_num_area">AB間再生回数</th>
+							<th class="is_start_position_a_area">A地点から再生</th>
+							<th class="play_area"></th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+				
+				<table class="play_list_template">
+					<tbody>
+						<tr>
+							<td class="delete_area">
+								<input type="button" value="×" class="delete_button">
+							</td>
+							<td class="filename_area">
+								<input type="hidden" name="file_path" value="">
+								<span class="filename">ダミー</span>
+							</td>
+							<td class="position_a_area">
+								<input type="number" step="0.1" name="position_a" value="">
+							</td>
+							<td class="position_b_area">
+								<input type="number" step="0.1" name="position_b" value="">
+							</td>
+							<td class="ab_repeat_num_area">
+								<input type="number" step="1" name="ab_repeat_num" value="">
+							</td>
+							<td class="is_start_position_a_area check_area">
+								<label class="full_label">
+									<input type="checkbox" name="is_start_position_a" value="yes">
+								</label>
+							</td>
+							<td class="play_area">
+								<input type="button" value="再生" class="play_button">
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
 		状態：<span id="status"></span><br>
 		位置：<span id="current_position"></span><br>
 		A地点のずれ：<span id="offset_position"></span><br>
 		<hr>
-		<h1>設定</h1>
-		再生ファイル:<input type="file" id="play_file_select" value=""><input type="hidden" id="play_file" value=""><br>
+		<h1>ファイル追加</h1>
+		
+		<input type="file" id="add_file_select" value="" multiple="multiple"><br>
+		<pre id="file_path"></pre>
+		
+		<hr>
+		
+		<h1>再生中ファイル情報</h1>
+		再生ファイル:<input type="hidden" id="play_file" value=""><br>
 		A:<input type="number" step="0.1" id="position_a" value="4.4"><br>
 		B:<input type="number" step="0.1" id="position_b" value="9.62"><br>
+		AB間再生回数:<input type="number" step="1" id="ab_repeat_num" value="2"><br>
 		<label>A地点から再生する<input type="checkbox" id="is_start_position_a" value="yes"></label><br>
 		
 		<br>
@@ -29,35 +182,116 @@
 		<input type="button" id="save" value="設定保存">
 		
 		<script>
+			/*
 			if (typeof window.console == "undefined") {
 				window.console = {
 					log: function(value) {
-//						alert(value);
+						alert(value);
 					}
 				}
 			}
-			/*
-			var fs_object = null;
-			try {
-				fs_object = WScript.CreateObject("Scripting.FileSystemObject");
-			} catch (e) {
-				fs_object = new ActiveXObject("Scripting.FileSystemObject");
-			}
-			console.log(fs_object);
-			var stream = fs_object.CreateTextFile("C:\\work\\test.txt", true);
-			stream.Write("hta write");
-			stream.Close();
 			*/
 			
-			// 再生ファイル選択時の処理
-			document.getElementById("play_file_select").onchange = function(){
-				document.getElementById("play_file").value = document.getElementById("play_file_select").value;
+			function get_file_name(file_path) {
+				var file_name_index = file_path.lastIndexOf("\\") + 1;
+				var file_name = file_path.substr(file_name_index);
+				return file_name;
+			}
+			
+			
+			
+			
+			function playlist_add_track(data) {
+				if (typeof data.position_a === "undefined") {
+					data.position_a = "";
+				}
+				
+				if (typeof data.position_b === "undefined") {
+					data.position_b = "";
+				}
+				
+				if (typeof data.ab_repeat_num === "undefined") {
+					data.ab_repeat_num = "";
+				}
+				
+				if (typeof data.is_start_position_a === "undefined") {
+					data.is_start_position_a = false;
+				}
+				
+				var new_row = document.querySelectorAll(".play_list_template tbody tr")[0].cloneNode(true);
+				
+				new_row.querySelectorAll(".filename_area input[name=file_path]")[0].value = data.file_path;
+				new_row.querySelectorAll(".filename_area .filename")[0].innerHTML = data.file_name;
+				
+				
+				new_row.querySelectorAll("input[name=position_a]")[0].value = data.position_a;
+				new_row.querySelectorAll("input[name=position_b]")[0].value = data.position_b;
+				new_row.querySelectorAll("input[name=ab_repeat_num]")[0].value = data.ab_repeat_num;
+				new_row.querySelectorAll("input[name=is_start_position_a]")[0].checked = data.is_start_position_a;
+				
+				new_row.querySelectorAll(".play_button")[0].onclick = function(){
+					var select_row = this.parentNode.parentNode;
+					
+					var file_path = select_row.querySelectorAll("input[name=file_path]")[0].value;
+					document.player.FileName = file_path;
+					document.getElementById("play_file").value = file_path;
+					document.getElementById("position_a").value = select_row.querySelectorAll("input[name=position_a]")[0].value;
+					document.getElementById("position_b").value = select_row.querySelectorAll("input[name=position_b]")[0].value;
+					document.getElementById("ab_repeat_num").value = select_row.querySelectorAll("input[name=ab_repeat_num]")[0].value;
+					document.getElementById("is_start_position_a").checked = select_row.querySelectorAll("input[name=is_start_position_a]")[0].checked;
+					
+					document.getElementById("play").click();
+				}
+				
+				document.querySelectorAll(".play_list tbody")[0].appendChild(new_row);
+			}
+			
+			// 
+			document.getElementById("add_file_select").onchange = function(){
+				var temp_file_list = this.value.split(", ");
+				
+				var fs_object = null;
+				try {
+					fs_object = WScript.CreateObject("Scripting.FileSystemObject");
+				} catch (e) {
+					try {
+						fs_object = new ActiveXObject("Scripting.FileSystemObject");
+					} catch(e2) {
+						null;
+					}
+				}
+				
+				if (fs_object == null) {
+					alert("選択に失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var file_list = [];
+				var temp_file_path = "";
+				for (var i = 0; i < temp_file_list.length; i++) {
+					temp_file_path += temp_file_list[i];
+					if (fs_object.FileExists(temp_file_path)) {
+						file_list.push(temp_file_path);
+						temp_file_path = "";
+					} else {
+						temp_file_path += ", ";
+					}
+				}
+				
+				for (var i = 0; i < file_list.length; i++) {
+					playlist_add_track({
+						file_path: file_list[i],
+						file_name: get_file_name(file_list[i])
+					});
+				}
+				
 			};
 			
 			var position_controll_interval_id = null;
 			var is_play_start = false;
 			var position_a = null;
 			var position_b = null;
+			var ab_repeat_count = null;
 			
 			// 「再生」ボタン押下時の処理
 			document.getElementById("play").onclick = function(){
@@ -73,7 +307,15 @@
 				document.getElementById("current_position").innerHTML = document.player.CurrentPosition;
 				
 				if (document.player.CurrentPosition >= position_b) {
-					document.player.CurrentPosition = position_a;
+					
+					console.log(ab_repeat_count);
+					if (ab_repeat_count >= document.getElementById("ab_repeat_num").value) {
+						document.player.Stop();
+						document.player.CurrentPosition = 0;
+					} else {
+						document.player.CurrentPosition = position_a;
+						ab_repeat_count++;
+					}
 				}
 			}
 			
@@ -125,11 +367,15 @@
 				stream.WriteLine("player_volume = " + document.player.Volume);
 				stream.WriteLine("");
 				
-				stream.WriteLine("filepath = " + document.player.FileName);
-				stream.WriteLine("position_a = " + document.getElementById("position_a").value);
-				stream.WriteLine("position_b = " + document.getElementById("position_b").value);
-				stream.WriteLine("is_start_position_a = " + (document.getElementById("is_start_position_a").checked ? "yes" : "no"));
-				stream.WriteLine("");
+				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
+				for (var i = 0; i < play_list.length; i++) {
+					stream.WriteLine("filepath = " + play_list[i].querySelectorAll("input[name=file_path]")[0].value);
+					stream.WriteLine("position_a = " + play_list[i].querySelectorAll("input[name=position_a]")[0].value);
+					stream.WriteLine("position_b = " + play_list[i].querySelectorAll("input[name=position_b]")[0].value);
+					stream.WriteLine("ab_repeat_num = " + play_list[i].querySelectorAll("input[name=ab_repeat_num]")[0].value);
+					stream.WriteLine("is_start_position_a = " + (play_list[i].querySelectorAll("input[name=is_start_position_a]")[0].checked ? "yes" : "no"));
+					stream.WriteLine("");
+				}
 				
 				stream.Close();
 			}
@@ -165,10 +411,11 @@
 				var filepath = null;
 				var position_a = null;
 				var position_b = null;
+				var ab_repeat_num = null;
 				var is_start_position_a = null;
 				while (!stream.AtEndOfStream) {
 					line = stream.ReadLine();
-					console.log(line);
+					// console.log(line);
 					
 					if (line.indexOf("player_volume = ") == 0) {
 						document.player.Volume = line.substr("player_volume = ".length);
@@ -178,30 +425,34 @@
 						position_a = line.substr("position_a = ".length);
 					} else if (line.indexOf("position_b = ") == 0) {
 						position_b = line.substr("position_b = ".length);
+					} else if (line.indexOf("ab_repeat_num = ") == 0) {
+						ab_repeat_num = line.substr("ab_repeat_num = ".length);
 					} else if (line.indexOf("is_start_position_a = ") == 0) {
 						is_start_position_a = line.substr("is_start_position_a = ".length) == "yes" ? true : false;
 					}
 					
 					if (filepath != null && position_a != null && position_b != null && is_start_position_a != null) {
-						document.player.FileName = filepath;
-						document.getElementById("play_file").value = filepath;
-						document.getElementById("position_a").value = position_a;
-						document.getElementById("position_b").value = position_b;
-						document.getElementById("is_start_position_a").checked = is_start_position_a;
+						// document.player.FileName = filepath;
+						
+						playlist_add_track({
+							file_path: filepath,
+							file_name: get_file_name(filepath),
+							position_a: position_a,
+							position_b: position_b,
+							ab_repeat_num: ab_repeat_num,
+							is_start_position_a: is_start_position_a
+						});
 						
 						filepath = null;
 						position_a = null;
 						position_b = null;
+						ab_repeat_num = null;
 						is_start_position_a = null;
 					}
 				};
 			}
 			read_setting_file();
 			
-/*			document.getElementById("player").addEventListener("PlayStateChange",function(newState) {
-				console.log("call change");
-			});*/
-
 		</script>
 
 		<script FOR="player" EVENT="PlayStateChange(oldState,newState)" LANGUAGE="Jscript">
@@ -229,6 +480,8 @@
 					if (document.getElementById("is_start_position_a").checked) {
 						document.player.CurrentPosition = position_a;
 					}
+					
+					ab_repeat_count = 1;
 				}
 				position_controll_interval_id = setInterval(position_controll, 50);
 			} else if (is_play_start) {
