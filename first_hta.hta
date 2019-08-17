@@ -169,7 +169,7 @@
 		<hr>
 		
 		<h1>再生中ファイル情報</h1>
-		再生ファイル:<input type="hidden" id="play_file" value=""><br>
+		再生ファイル:<input type="text" id="play_file" value=""><br>
 		A:<input type="number" step="0.1" id="position_a" value="4.4"><br>
 		B:<input type="number" step="0.1" id="position_b" value="9.62"><br>
 		AB間再生回数:<input type="number" step="1" id="ab_repeat_num" value="2"><br>
@@ -228,6 +228,11 @@
 				new_row.querySelectorAll("input[name=position_b]")[0].value = data.position_b;
 				new_row.querySelectorAll("input[name=ab_repeat_num]")[0].value = data.ab_repeat_num;
 				new_row.querySelectorAll("input[name=is_start_position_a]")[0].checked = data.is_start_position_a;
+				
+				new_row.querySelectorAll(".delete_button")[0].onclick = function(){
+					var select_row = this.parentNode.parentNode;
+					select_row.parentNode.removeChild(select_row);
+				}
 				
 				new_row.querySelectorAll(".play_button")[0].onclick = function(){
 					var select_row = this.parentNode.parentNode;
