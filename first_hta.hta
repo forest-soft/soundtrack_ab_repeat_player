@@ -492,6 +492,7 @@
 				document.player.Stop();
 				
 				document.player.FileName = document.getElementById("play_file").value;
+				
 				is_play_start = true;
 			}
 			
@@ -677,7 +678,7 @@
 		</script>
 
 		<script FOR="player" EVENT="PlayStateChange(oldState,newState)" LANGUAGE="Jscript">
-			console.log("before：" + oldState + " - after" + newState);
+			// console.log("before：" + oldState + " - after" + newState + " - flg = " + (is_play_start ? "true" : "false"));
 			player_status_cehck();
 			
 			if (is_play_start && newState == 0 && oldState == 3) {
@@ -705,16 +706,21 @@
 					ab_repeat_count = 1;
 				}
 				position_controll_interval_id = setInterval(position_controll, 50);
-			} else if (newState == 0 && oldState == 3) {
 				
 			} else if (is_play_start) {
-				//is_play_start = false;
+				// is_play_start = false;
 			}
 		</script>
 		
 		<!-- 再生が終了した場合のイベント -->
 		<script for="player" event="EndOfStream(lResult)" language="Jscript">
-			track_play_finish();
+			clearInterval(position_controll_interval_id);
+			position_controll_interval_id = null;
+			
+			// 普通に動かすと次のトラックの再生に失敗するので非同期で動かす。
+			setTimeout(function(){
+				track_play_finish();
+			}, 1);
 		</script>
 		
 	</body>
