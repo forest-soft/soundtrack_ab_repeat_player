@@ -21,24 +21,75 @@
 				float:left;
 			}
 			
+			.float_box .float_right {
+				float: right;
+			}
+			
+			.main_area {
+				height: 500px;
+			}
+			
 			.main_area .player_area {
 				float: left;
 				width: 300px;
 			}
 			
+			.main_area .player_area .player_information_area .controll_button {
+				height: 50px;
+			}
+			
 			.main_area .play_list_area {
 				float: left;
+				width: 850px;
+			}
+			
+			.main_area .play_list_area .action_area .action_box {
+				border: solid 1px;
+				height: 55px;
+				margin-right: 10px;
+				padding: 5px;
+			}
+			
+			.main_area .play_list_area .action_area .action_box #add_file_select_trigger {
+				width: 100%;
+			}
+			
+			.main_area .play_list_area .action_area input[type=file] {
+				display: none;
 			}
 			
 			.main_area .play_list_area .play_list {
-				width: 700px;
 				table-layout: fixed;
-				border: solid 1px;
+				border-collapse: collapse;
 			}
 			
 			.main_area .play_list_area .play_list th,
 			.main_area .play_list_area .play_list td {
 				border: solid 1px;
+			}
+			
+			.main_area .play_list_area .play_list th {
+				background-color: #ccffcc;
+			}
+			
+			.main_area .play_list_area .play_list thead,
+			.main_area .play_list_area .play_list tbody {
+				display: block;
+			}
+			
+			.main_area .play_list_area .play_list tbody {
+				height: 400px;
+				overflow-x: hidden;
+				overflow-y: scroll;
+				-ms-overflow-x: hidden;
+				-ms-overflow-y: scroll;
+				position: absolute;
+				margin-top: -1px;
+			}
+			
+			.main_area .play_list_area .play_list tbody tr.active {
+				background-color: #2872e9;
+				color: white;
 			}
 			
 			.main_area .play_list_area .play_list_template {
@@ -57,7 +108,7 @@
 			}
 			
 			.main_area .play_list_area .filename_area {
-				
+				width: 500px;
 			}
 			
 			.main_area .play_list_area .position_a_area,
@@ -66,11 +117,11 @@
 			}
 			
 			.main_area .play_list_area .ab_repeat_num_area {
-				width: 110px;
+				width: 70px;
 			}
 			
 			.main_area .play_list_area .is_start_position_a_area {
-				width: 110px;
+				width: 50px;
 			}
 			
 			.main_area .play_list_area .play_area {
@@ -95,20 +146,79 @@
 			
 			
 			
-			
+			.play_detail_area {
+				display: none;
+			}
 		</style>
 	</head>
 	<body>
-		<h1>プレイヤー</h1>
 		<div class="main_area">
 			<div class="player_area">
-				<object id="player" classid="CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95" height="44px">
-					<PARAM NAME="FileName" VALUE="" />
+				<object id="player" classid="CLSID:22D6F312-B0F6-11D0-94AB-0080C74C7E95" width="295">
+					<param name="FileName" value="" />
 					<param name="AutoStart" value="false" />
 					<param name="ShowPositionControls" value="false" />
 				</object>
+				<div class="player_information_area">
+					<input type="button" id="prev_track" value="前へ" class="controll_button">
+					<label>ランダム再生<input type="checkbox" id="is_random_play" value="yes" checked="checked"></label>
+					<label>連続再生<input type="checkbox" id="is_auto_play" value="yes" checked="checked"></label>
+					<input type="button" id="next_track" value="次へ" class="controll_button">
+					<br>
+					<br>
+					<br>
+					状態：<span id="status"></span><br>
+					位置：<span id="current_position"></span><br>
+					A地点のずれ：<span id="offset_position"></span><br>
+				</div>
 			</div>
 			<div class="play_list_area">
+				<div class="action_area">
+					<div class="float_box">
+						<div class="action_box float_left">
+							<table>
+								<thead>
+									<tr>
+										<th colspan="2">
+											プレイリスト
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<input type="button" id="load" value="読み込み">
+										</td>
+										<td>
+											<input type="button" id="save" value="設定保存">
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						
+						<div class="action_box float_left">
+							<table>
+								<thead>
+									<tr>
+										<th>
+											再生ファイル
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<input type="button" id="add_file_select_trigger" value="追加">
+											<input type="file" id="add_file_select" value="" multiple="multiple">
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				
 				<table class="play_list">
 					<thead>
 						<tr>
@@ -116,8 +226,8 @@
 							<th class="filename_area">ファイル名</th>
 							<th class="position_a_area">A地点</th>
 							<th class="position_b_area">B地点</th>
-							<th class="ab_repeat_num_area">AB間再生回数</th>
-							<th class="is_start_position_a_area">A地点から再生</th>
+							<th class="ab_repeat_num_area">A-B間<br>再生回数</th>
+							<th class="is_start_position_a_area">Aから<br>再生</th>
 							<th class="play_area"></th>
 						</tr>
 					</thead>
@@ -157,29 +267,17 @@
 				</table>
 			</div>
 		</div>
-		状態：<span id="status"></span><br>
-		位置：<span id="current_position"></span><br>
-		A地点のずれ：<span id="offset_position"></span><br>
-		<hr>
-		<h1>ファイル追加</h1>
 		
-		<input type="file" id="add_file_select" value="" multiple="multiple"><br>
-		<pre id="file_path"></pre>
-		
-		<hr>
-		
-		<h1>再生中ファイル情報</h1>
-		再生ファイル:<input type="text" id="play_file" value=""><br>
-		A:<input type="number" step="0.1" id="position_a" value="4.4"><br>
-		B:<input type="number" step="0.1" id="position_b" value="9.62"><br>
-		AB間再生回数:<input type="number" step="1" id="ab_repeat_num" value="2"><br>
-		<label>A地点から再生する<input type="checkbox" id="is_start_position_a" value="yes"></label><br>
-		
-		<br>
-		
-		<input type="button" id="play" value="再生">
-		<hr>
-		<input type="button" id="save" value="設定保存">
+		<div class="play_detail_area">
+			<hr>
+			<h1>再生中ファイル情報</h1>
+			再生ファイル:<input type="text" id="play_file" value=""><br>
+			A:<input type="number" step="0.1" id="position_a" value=""><br>
+			B:<input type="number" step="0.1" id="position_b" value=""><br>
+			AB間再生回数:<input type="number" step="1" id="ab_repeat_num" value=""><br>
+			<label>A地点から再生する<input type="checkbox" id="is_start_position_a" value="yes"></label><br>
+			<input type="button" id="play" value="再生">
+		</div>
 		
 		<script>
 			/*
@@ -191,6 +289,8 @@
 				}
 			}
 			*/
+			
+			window.resizeTo(1200, 600);
 			
 			function get_file_name(file_path) {
 				var file_name_index = file_path.lastIndexOf("\\") + 1;
@@ -240,10 +340,22 @@
 					var file_path = select_row.querySelectorAll("input[name=file_path]")[0].value;
 					document.player.FileName = file_path;
 					document.getElementById("play_file").value = file_path;
-					document.getElementById("position_a").value = select_row.querySelectorAll("input[name=position_a]")[0].value;
+					
+					var position_a = select_row.querySelectorAll("input[name=position_a]")[0].value;
+					if (position_a == "") {
+						position_a = 0;
+					}
+					document.getElementById("position_a").value = position_a;
+					
 					document.getElementById("position_b").value = select_row.querySelectorAll("input[name=position_b]")[0].value;
 					document.getElementById("ab_repeat_num").value = select_row.querySelectorAll("input[name=ab_repeat_num]")[0].value;
 					document.getElementById("is_start_position_a").checked = select_row.querySelectorAll("input[name=is_start_position_a]")[0].checked;
+					
+					var active_row = document.querySelectorAll(".play_list tbody tr.active")[0];
+					if (active_row) {
+						active_row.classList.remove("active");
+					}
+					select_row.classList.add("active");
 					
 					document.getElementById("play").click();
 				}
@@ -251,8 +363,82 @@
 				document.querySelectorAll(".play_list tbody")[0].appendChild(new_row);
 			}
 			
-			// 
-			document.getElementById("add_file_select").onchange = function(){
+			function playlist_clear() {
+				var track_list = document.querySelectorAll(".play_list tbody")[0];
+				while (track_list.firstChild) {
+					track_list.removeChild(track_list.firstChild);
+				}
+			}
+			
+			document.getElementById("prev_track").onclick = function() {
+				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
+				if (play_list.length == 0) {
+					return false;
+				}
+				
+				var active_row = document.querySelectorAll(".play_list tbody tr.active")[0];
+				var prev_row_index = null;
+				if (active_row) {
+					active_row_index = [].indexOf.call(play_list, active_row);
+					
+					if (document.getElementById("is_random_play").checked) {
+						while (true) {
+							prev_row_index = Math.floor(Math.random() * play_list.length);
+							if (active_row_index != prev_row_index) {
+								break;
+							}
+						};
+					} else {
+						prev_row_index = active_row_index - 1;
+						
+						if (prev_row_index < 0) {
+							prev_row_index = play_list.length - 1;
+						}
+					}
+				} else {
+					prev_row_index = play_list.length - 1;
+				}
+				
+				play_list[prev_row_index].querySelectorAll(".play_button")[0].click();
+			}
+			
+			document.getElementById("next_track").onclick = function() {
+				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
+				if (play_list.length == 0) {
+					return false;
+				}
+				
+				var active_row = document.querySelectorAll(".play_list tbody tr.active")[0];
+				var next_row_index = null;
+				if (active_row) {
+					active_row_index = [].indexOf.call(play_list, active_row);
+					
+					if (document.getElementById("is_random_play").checked) {
+						while (true) {
+							next_row_index = Math.floor(Math.random() * play_list.length);
+							if (active_row_index != next_row_index) {
+								break;
+							}
+						};
+					} else {
+						next_row_index = active_row_index + 1;
+						
+						if (play_list.length <= next_row_index) {
+							next_row_index = 0;
+						}
+					}
+				} else {
+					next_row_index = 0;
+				}
+				
+				play_list[next_row_index].querySelectorAll(".play_button")[0].click();
+			}
+			
+			document.getElementById("add_file_select_trigger").onclick = function() {
+				document.getElementById("add_file_select").click();
+			}
+			
+			document.getElementById("add_file_select").onchange = function() {
 				var temp_file_list = this.value.split(", ");
 				
 				var fs_object = null;
@@ -301,6 +487,8 @@
 			// 「再生」ボタン押下時の処理
 			document.getElementById("play").onclick = function(){
 				clearInterval(position_controll_interval_id);
+				position_controll_interval_id = null;
+				
 				document.player.Stop();
 				
 				document.player.FileName = document.getElementById("play_file").value;
@@ -311,17 +499,20 @@
 			var position_controll = function() {
 				document.getElementById("current_position").innerHTML = document.player.CurrentPosition;
 				
-				if (document.player.CurrentPosition >= position_b) {
-					
-					console.log(ab_repeat_count);
-					if (ab_repeat_count >= document.getElementById("ab_repeat_num").value) {
+				if (position_b != "" && document.player.CurrentPosition >= position_b) {
+					var ab_repeat_num = document.getElementById("ab_repeat_num").value;
+					if (ab_repeat_num != "" && ab_repeat_count >= ab_repeat_num) {
 						document.player.Stop();
 						document.player.CurrentPosition = 0;
+						
+						track_play_finish();
 					} else {
 						document.player.CurrentPosition = position_a;
 						ab_repeat_count++;
 					}
 				}
+				
+				player_status_cehck();
 			}
 			
 			// 再生ステータスの監視処理
@@ -330,7 +521,13 @@
 				var player_status_list = {
 					0: "停止",
 					1: "一時停止",
-					2: "再生"
+					2: "再生",
+					3: "再生待ち",
+					4: "早送り",
+					5: "巻き戻し",
+					6: "次のトラックへ",
+					7: "前のトラックへ",
+					8: "ストリームクローズ"
 				};
 				if (typeof player_status_list[document.player.PlayState] != "undefined") {
 					player_status = player_status_list[document.player.PlayState];
@@ -340,9 +537,16 @@
 				if (document.player.PlayState != 2) {
 					// 再生中でない場合は再生位置制御の処理を中断する。
 					clearInterval(position_controll_interval_id);
+					position_controll_interval_id = null;
 				}
 			}
 			player_status_cehck();
+			
+			var track_play_finish = function() {
+				if (document.getElementById("is_auto_play").checked) {
+					document.getElementById("next_track").click();
+				}
+			}
 			
 			// 「保存」ボタン押下時の処理
 			document.getElementById("save").onclick = function(){
@@ -370,6 +574,8 @@
 				}
 				
 				stream.WriteLine("player_volume = " + document.player.Volume);
+				stream.WriteLine("is_random_play = " + (document.getElementById("is_random_play").checked ? "yes" : "no"));
+				stream.WriteLine("is_auto_play = " + (document.getElementById("is_auto_play").checked ? "yes" : "no"));
 				stream.WriteLine("");
 				
 				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
@@ -412,6 +618,8 @@
 					return false;
 				}
 				
+				playlist_clear();
+				
 				var line = null;
 				var filepath = null;
 				var position_a = null;
@@ -424,6 +632,10 @@
 					
 					if (line.indexOf("player_volume = ") == 0) {
 						document.player.Volume = line.substr("player_volume = ".length);
+					} else if (line.indexOf("is_random_play = ") == 0) {
+						document.getElementById("is_random_play").checked = line.substr("is_random_play = ".length) == "yes" ? true : false;
+					} else if (line.indexOf("is_auto_play = ") == 0) {
+						document.getElementById("is_auto_play").checked = line.substr("is_auto_play = ".length) == "yes" ? true : false;
 					} else if (line.indexOf("filepath = ") == 0) {
 						filepath = line.substr("filepath = ".length);
 					} else if (line.indexOf("position_a = ") == 0) {
@@ -458,40 +670,52 @@
 			}
 			read_setting_file();
 			
+			document.getElementById("load").onclick = function(){
+				read_setting_file();
+			}
+			
 		</script>
 
 		<script FOR="player" EVENT="PlayStateChange(oldState,newState)" LANGUAGE="Jscript">
-			//console.log("before：" + oldState + " - after" + newState);
+			console.log("before：" + oldState + " - after" + newState);
 			player_status_cehck();
 			
 			if (is_play_start && newState == 0 && oldState == 3) {
 				// 再生ファイルを変更した場合
 				// document.player.CurrentPosition = document.getElementById("position_a").value;
+				
 				document.player.Play();
 				
 				// なぜか開始位置がずれる。
 				var input_position = parseFloat(document.getElementById("position_a").value);
 				var real_position = parseFloat(document.player.CurrentPosition);
-				console.log("input_position:" + input_position);
-				console.log("real_position:" + real_position);
-				console.log(input_position - real_position);
 				document.getElementById("offset_position").innerHTML = input_position - real_position;
+				
+				is_play_start = false;
 			} else if (newState == 2) {
 				// 再生開始の場合
 				if (oldState != 1) {
 					position_a = document.getElementById("position_a").value;
 					position_b = document.getElementById("position_b").value;
 					
-					if (document.getElementById("is_start_position_a").checked) {
+					if (document.getElementById("is_start_position_a").checked && position_a != "") {
 						document.player.CurrentPosition = position_a;
 					}
 					
 					ab_repeat_count = 1;
 				}
 				position_controll_interval_id = setInterval(position_controll, 50);
+			} else if (newState == 0 && oldState == 3) {
+				
 			} else if (is_play_start) {
-				is_play_start = false;
+				//is_play_start = false;
 			}
 		</script>
+		
+		<!-- 再生が終了した場合のイベント -->
+		<script for="player" event="EndOfStream(lResult)" language="Jscript">
+			track_play_finish();
+		</script>
+		
 	</body>
 </html>
