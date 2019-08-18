@@ -170,6 +170,7 @@
 					状態：<span id="status"></span><br>
 					位置：<span id="current_position"></span><br>
 					A地点のずれ：<span id="offset_position"></span><br>
+					※wmaだと約1秒ほどタイミングがずれます。<br>
 				</div>
 			</div>
 			<div class="play_list_area">
@@ -180,16 +181,18 @@
 								<thead>
 									<tr>
 										<th colspan="2">
-											設定
+											プレイリスト
 										</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr>
-										<td>
-											<input type="button" id="load" value="読み込み">
+										<td style="padding-right: 10px; border-right-style: solid;">
+											<input type="button" id="load_trigger" value="読み込み">
+											<input type="file" id="load" value="読み込み" accept=".sarp">
 										</td>
 										<td>
+											タイトル：<input type="text" id="play_list_title">
 											<input type="button" id="save" value="保存">
 										</td>
 									</tr>
@@ -280,17 +283,26 @@
 		</div>
 		
 		<script>
-			/*
-			if (typeof window.console == "undefined") {
-				window.console = {
-					log: function(value) {
-						alert(value);
-					}
+			var fso = null;
+			try {
+				fso = WScript.CreateObject("Scripting.FileSystemObject");
+			} catch (e) {
+				try {
+					fso = new ActiveXObject("Scripting.FileSystemObject");
+				} catch(e2) {
+					null;
 				}
 			}
-			*/
 			
-			window.resizeTo(1200, 600);
+			if (fso == null) {
+				alert("FileSystemObjectの初期化に失敗しました。");
+			}
+			
+
+			
+			
+			
+			
 			
 			function get_file_name(file_path) {
 				var file_name_index = file_path.lastIndexOf("\\") + 1;
@@ -298,8 +310,72 @@
 				return file_name;
 			}
 			
+			function save_setting() {
+				if (fso == null) {
+					console.log("保存に失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var stream = null;
+				try {
+					stream = fso.CreateTextFile(".\\setting.txt", true);
+				} catch (e) {
+					console.log("保存に失敗しました。(Error:2)\r\n" + e.description);
+					return false;
+				}
+				
+				stream.WriteLine("player_volume = " + document.player.Volume);
+				stream.WriteLine("is_random_play = " + (document.getElementById("is_random_play").checked ? "yes" : "no"));
+				stream.WriteLine("is_auto_play = " + (document.getElementById("is_auto_play").checked ? "yes" : "no"));
+				stream.WriteLine("window_size_width = " + window.outerWidth);
+				stream.WriteLine("window_size_height = " + window.outerHeight);
+				
+				stream.Close();
+			}
 			
+			window.onbeforeunload = function(e) {
+				save_setting();
+			}
 			
+			function load_setting() {
+				if (fso == null) {
+					console.log("読み込みに失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var stream = null;
+				try {
+					stream = fso.OpenTextFile(".\\setting.txt");
+				} catch (e) {
+					null;
+				}
+				
+				if (stream == null) {
+					return false;
+				}
+				
+				var window_size_width = 1200;
+				var window_size_height = 600;
+				var line = null;
+				while (!stream.AtEndOfStream) {
+					line = stream.ReadLine();
+					// console.log(line);
+					
+					if (line.indexOf("player_volume = ") == 0) {
+						document.player.Volume = line.substr("player_volume = ".length);
+					} else if (line.indexOf("is_random_play = ") == 0) {
+						document.getElementById("is_random_play").checked = line.substr("is_random_play = ".length) == "yes" ? true : false;
+					} else if (line.indexOf("is_auto_play = ") == 0) {
+						document.getElementById("is_auto_play").checked = line.substr("is_auto_play = ".length) == "yes" ? true : false;
+					} else if (line.indexOf("window_size_width = ") == 0) {
+						window_size_width = line.substr("window_size_width = ".length);
+					} else if (line.indexOf("window_size_height = ") == 0) {
+						window_size_height = line.substr("window_size_height = ".length);
+					}
+				}
+				window.resizeTo(window_size_width, window_size_height);
+			}
+			load_setting();
 			
 			function playlist_add_track(data) {
 				if (typeof data.position_a === "undefined") {
@@ -329,11 +405,13 @@
 				new_row.querySelectorAll("input[name=ab_repeat_num]")[0].value = data.ab_repeat_num;
 				new_row.querySelectorAll("input[name=is_start_position_a]")[0].checked = data.is_start_position_a;
 				
+				// トラックごとの削除ボタン押下時の処理
 				new_row.querySelectorAll(".delete_button")[0].onclick = function(){
 					var select_row = this.parentNode.parentNode;
 					select_row.parentNode.removeChild(select_row);
 				}
 				
+				// トラックごとの「再生」ボタン押下時の処理
 				new_row.querySelectorAll(".play_button")[0].onclick = function(){
 					var select_row = this.parentNode.parentNode;
 					
@@ -370,6 +448,157 @@
 				}
 			}
 			
+			
+			// プレイリストの「読み込み」ボタン押下時の処理
+			document.getElementById("load_trigger").onclick = function(){
+				document.getElementById("load").value = "";
+				document.getElementById("load").click();
+			}
+			
+			// プレイリストファイル選択時の処理
+			document.getElementById("load").onchange = function(){
+				if (this.value.length == 0) {
+					return false;
+				}
+				
+				if (fso == null) {
+					alert("設定ファイルの読み込みに失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var stream = null;
+				try {
+					stream = fso.OpenTextFile(this.value);
+				} catch (e) {
+					null;
+				}
+				
+				if (stream == null) {
+					return false;
+				}
+				
+				playlist_clear();
+				
+				var line = null;
+				var filepath = null;
+				var position_a = null;
+				var position_b = null;
+				var ab_repeat_num = null;
+				var is_start_position_a = null;
+				while (!stream.AtEndOfStream) {
+					line = stream.ReadLine();
+					// console.log(line);
+					
+					if (line.indexOf("filepath = ") == 0) {
+						filepath = line.substr("filepath = ".length);
+					} else if (line.indexOf("position_a = ") == 0) {
+						position_a = line.substr("position_a = ".length);
+					} else if (line.indexOf("position_b = ") == 0) {
+						position_b = line.substr("position_b = ".length);
+					} else if (line.indexOf("ab_repeat_num = ") == 0) {
+						ab_repeat_num = line.substr("ab_repeat_num = ".length);
+					} else if (line.indexOf("is_start_position_a = ") == 0) {
+						is_start_position_a = line.substr("is_start_position_a = ".length) == "yes" ? true : false;
+					}
+					
+					if (filepath != null && position_a != null && position_b != null && is_start_position_a != null) {
+						// document.player.FileName = filepath;
+						
+						playlist_add_track({
+							file_path: filepath,
+							file_name: get_file_name(filepath),
+							position_a: position_a,
+							position_b: position_b,
+							ab_repeat_num: ab_repeat_num,
+							is_start_position_a: is_start_position_a
+						});
+						
+						filepath = null;
+						position_a = null;
+						position_b = null;
+						ab_repeat_num = null;
+						is_start_position_a = null;
+					}
+				};
+				
+				var play_list_file_name = get_file_name(this.value);
+				document.getElementById("play_list_title").value = play_list_file_name.slice(0, ".sarp".length * -1);
+				
+			}
+			
+			// プレイリストの「保存」ボタン押下時の処理
+			document.getElementById("save").onclick = function(){
+				if (fso == null) {
+					alert("保存に失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var play_list_file_name = document.getElementById("play_list_title").value;
+				if (play_list_file_name.length == 0) {
+					play_list_file_name = "default_play_list";
+				}
+				
+				play_list_file_name += ".sarp";
+				var stream = null;
+				try {
+					stream = fso.CreateTextFile(".\\" + play_list_file_name, true);
+				} catch (e) {
+					alert("保存に失敗しました。(Error:2)\r\n" + e.description);
+					return false;
+				}
+				
+				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
+				for (var i = 0; i < play_list.length; i++) {
+					stream.WriteLine("filepath = " + play_list[i].querySelectorAll("input[name=file_path]")[0].value);
+					stream.WriteLine("position_a = " + play_list[i].querySelectorAll("input[name=position_a]")[0].value);
+					stream.WriteLine("position_b = " + play_list[i].querySelectorAll("input[name=position_b]")[0].value);
+					stream.WriteLine("ab_repeat_num = " + play_list[i].querySelectorAll("input[name=ab_repeat_num]")[0].value);
+					stream.WriteLine("is_start_position_a = " + (play_list[i].querySelectorAll("input[name=is_start_position_a]")[0].checked ? "yes" : "no"));
+					stream.WriteLine("");
+				}
+				
+				stream.Close();
+				
+				alert("保存しました！");
+			}
+			
+			// 再生ファイル追加ボタン押下時の処理
+			document.getElementById("add_file_select_trigger").onclick = function() {
+				document.getElementById("add_file_select").value = "";
+				document.getElementById("add_file_select").click();
+			}
+			
+			// 再生ファイル選択時の処理
+			document.getElementById("add_file_select").onchange = function() {
+				var temp_file_list = this.value.split(", ");
+				
+				if (fso == null) {
+					alert("選択に失敗しました。(Error:1)");
+					return false;
+				}
+				
+				var file_list = [];
+				var temp_file_path = "";
+				for (var i = 0; i < temp_file_list.length; i++) {
+					temp_file_path += temp_file_list[i];
+					if (fso.FileExists(temp_file_path)) {
+						file_list.push(temp_file_path);
+						temp_file_path = "";
+					} else {
+						temp_file_path += ", ";
+					}
+				}
+				
+				for (var i = 0; i < file_list.length; i++) {
+					playlist_add_track({
+						file_path: file_list[i],
+						file_name: get_file_name(file_list[i])
+					});
+				}
+				
+			};
+			
+			// 前のトラックへボタンの押下時の処理
 			document.getElementById("prev_track").onclick = function() {
 				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
 				if (play_list.length == 0) {
@@ -402,6 +631,7 @@
 				play_list[prev_row_index].querySelectorAll(".play_button")[0].click();
 			}
 			
+			// 次のトラックへボタン押下時の処理
 			document.getElementById("next_track").onclick = function() {
 				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
 				if (play_list.length == 0) {
@@ -434,50 +664,6 @@
 				play_list[next_row_index].querySelectorAll(".play_button")[0].click();
 			}
 			
-			document.getElementById("add_file_select_trigger").onclick = function() {
-				document.getElementById("add_file_select").click();
-			}
-			
-			document.getElementById("add_file_select").onchange = function() {
-				var temp_file_list = this.value.split(", ");
-				
-				var fs_object = null;
-				try {
-					fs_object = WScript.CreateObject("Scripting.FileSystemObject");
-				} catch (e) {
-					try {
-						fs_object = new ActiveXObject("Scripting.FileSystemObject");
-					} catch(e2) {
-						null;
-					}
-				}
-				
-				if (fs_object == null) {
-					alert("選択に失敗しました。(Error:1)");
-					return false;
-				}
-				
-				var file_list = [];
-				var temp_file_path = "";
-				for (var i = 0; i < temp_file_list.length; i++) {
-					temp_file_path += temp_file_list[i];
-					if (fs_object.FileExists(temp_file_path)) {
-						file_list.push(temp_file_path);
-						temp_file_path = "";
-					} else {
-						temp_file_path += ", ";
-					}
-				}
-				
-				for (var i = 0; i < file_list.length; i++) {
-					playlist_add_track({
-						file_path: file_list[i],
-						file_name: get_file_name(file_list[i])
-					});
-				}
-				
-			};
-			
 			var position_controll_interval_id = null;
 			var is_play_start = false;
 			var position_a = null;
@@ -492,12 +678,11 @@
 				document.player.Stop();
 				
 				document.player.FileName = document.getElementById("play_file").value;
-				
 				is_play_start = true;
 			}
 			
 			// 再生位置の監視処理
-			var position_controll = function() {
+			function position_controll() {
 				document.getElementById("current_position").innerHTML = document.player.CurrentPosition;
 				
 				if (position_b != "" && document.player.CurrentPosition >= position_b) {
@@ -517,7 +702,7 @@
 			}
 			
 			// 再生ステータスの監視処理
-			var player_status_cehck = function() {
+			function player_status_cehck() {
 				var player_status = "不明";
 				var player_status_list = {
 					0: "停止",
@@ -543,141 +728,14 @@
 			}
 			player_status_cehck();
 			
-			var track_play_finish = function() {
+			function track_play_finish() {
 				if (document.getElementById("is_auto_play").checked) {
 					document.getElementById("next_track").click();
 				}
 			}
-			
-			// 「保存」ボタン押下時の処理
-			document.getElementById("save").onclick = function(){
-				var fs_object = null;
-				try {
-					fs_object = WScript.CreateObject("Scripting.FileSystemObject");
-				} catch (e) {
-					try {
-						fs_object = new ActiveXObject("Scripting.FileSystemObject");
-					} catch(e2) {
-						null;
-					}
-				}
-				if (fs_object == null) {
-					alert("保存に失敗しました。(Error:1)");
-					return false;
-				}
-				
-				var stream = null;
-				try {
-					stream = fs_object.CreateTextFile(".\\play_setting.txt", true);
-				} catch (e) {
-					alert("保存に失敗しました。(Error:2)\r\n" + e.description);
-					return false;
-				}
-				
-				stream.WriteLine("player_volume = " + document.player.Volume);
-				stream.WriteLine("is_random_play = " + (document.getElementById("is_random_play").checked ? "yes" : "no"));
-				stream.WriteLine("is_auto_play = " + (document.getElementById("is_auto_play").checked ? "yes" : "no"));
-				stream.WriteLine("");
-				
-				var play_list = document.querySelectorAll(".play_list_area .play_list tbody tr");
-				for (var i = 0; i < play_list.length; i++) {
-					stream.WriteLine("filepath = " + play_list[i].querySelectorAll("input[name=file_path]")[0].value);
-					stream.WriteLine("position_a = " + play_list[i].querySelectorAll("input[name=position_a]")[0].value);
-					stream.WriteLine("position_b = " + play_list[i].querySelectorAll("input[name=position_b]")[0].value);
-					stream.WriteLine("ab_repeat_num = " + play_list[i].querySelectorAll("input[name=ab_repeat_num]")[0].value);
-					stream.WriteLine("is_start_position_a = " + (play_list[i].querySelectorAll("input[name=is_start_position_a]")[0].checked ? "yes" : "no"));
-					stream.WriteLine("");
-				}
-				
-				stream.Close();
-			}
-			
-			var read_setting_file = function() {
-				var fs_object = null;
-				try {
-					fs_object = WScript.CreateObject("Scripting.FileSystemObject");
-				} catch (e) {
-					try {
-						fs_object = new ActiveXObject("Scripting.FileSystemObject");
-					} catch(e2) {
-						null;
-					}
-				}
-				if (fs_object == null) {
-					alert("設定ファイルの読み込みに失敗しました。(Error:1)");
-					return false;
-				}
-				
-				var stream = null;
-				try {
-					stream = fs_object.OpenTextFile(".\\play_setting.txt");
-				} catch (e) {
-					null;
-				}
-
-				if (stream == null) {
-					return false;
-				}
-				
-				playlist_clear();
-				
-				var line = null;
-				var filepath = null;
-				var position_a = null;
-				var position_b = null;
-				var ab_repeat_num = null;
-				var is_start_position_a = null;
-				while (!stream.AtEndOfStream) {
-					line = stream.ReadLine();
-					// console.log(line);
-					
-					if (line.indexOf("player_volume = ") == 0) {
-						document.player.Volume = line.substr("player_volume = ".length);
-					} else if (line.indexOf("is_random_play = ") == 0) {
-						document.getElementById("is_random_play").checked = line.substr("is_random_play = ".length) == "yes" ? true : false;
-					} else if (line.indexOf("is_auto_play = ") == 0) {
-						document.getElementById("is_auto_play").checked = line.substr("is_auto_play = ".length) == "yes" ? true : false;
-					} else if (line.indexOf("filepath = ") == 0) {
-						filepath = line.substr("filepath = ".length);
-					} else if (line.indexOf("position_a = ") == 0) {
-						position_a = line.substr("position_a = ".length);
-					} else if (line.indexOf("position_b = ") == 0) {
-						position_b = line.substr("position_b = ".length);
-					} else if (line.indexOf("ab_repeat_num = ") == 0) {
-						ab_repeat_num = line.substr("ab_repeat_num = ".length);
-					} else if (line.indexOf("is_start_position_a = ") == 0) {
-						is_start_position_a = line.substr("is_start_position_a = ".length) == "yes" ? true : false;
-					}
-					
-					if (filepath != null && position_a != null && position_b != null && is_start_position_a != null) {
-						// document.player.FileName = filepath;
-						
-						playlist_add_track({
-							file_path: filepath,
-							file_name: get_file_name(filepath),
-							position_a: position_a,
-							position_b: position_b,
-							ab_repeat_num: ab_repeat_num,
-							is_start_position_a: is_start_position_a
-						});
-						
-						filepath = null;
-						position_a = null;
-						position_b = null;
-						ab_repeat_num = null;
-						is_start_position_a = null;
-					}
-				};
-			}
-			read_setting_file();
-			
-			document.getElementById("load").onclick = function(){
-				read_setting_file();
-			}
-			
 		</script>
-
-		<script FOR="player" EVENT="PlayStateChange(oldState,newState)" LANGUAGE="Jscript">
+		
+		<script for="player" event="PlayStateChange(oldState,newState)" language="Jscript">
 			// console.log("before：" + oldState + " - after" + newState + " - flg = " + (is_play_start ? "true" : "false"));
 			player_status_cehck();
 			
@@ -687,14 +745,16 @@
 				
 				document.player.Play();
 				
-				// なぜか開始位置がずれる。
+				// wmaだとなぜか開始位置がずれる。
 				var input_position = parseFloat(document.getElementById("position_a").value);
 				var real_position = parseFloat(document.player.CurrentPosition);
-				document.getElementById("offset_position").innerHTML = input_position - real_position;
+				var margin_position = real_position - input_position;
+				document.getElementById("offset_position").innerHTML = (margin_position === (input_position * -1)) ? 0 : margin_position;
 				
 				is_play_start = false;
 			} else if (newState == 2) {
 				// 再生開始の場合
+				
 				if (oldState != 1) {
 					position_a = document.getElementById("position_a").value;
 					position_b = document.getElementById("position_b").value;
@@ -722,6 +782,5 @@
 				track_play_finish();
 			}, 1);
 		</script>
-		
 	</body>
 </html>
