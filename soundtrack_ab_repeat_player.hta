@@ -285,13 +285,9 @@
 		<script>
 			var fso = null;
 			try {
-				fso = WScript.CreateObject("Scripting.FileSystemObject");
+				fso = new ActiveXObject("Scripting.FileSystemObject");
 			} catch (e) {
-				try {
-					fso = new ActiveXObject("Scripting.FileSystemObject");
-				} catch(e2) {
-					null;
-				}
+				null;
 			}
 			
 			if (fso == null) {
@@ -374,6 +370,8 @@
 					}
 				}
 				window.resizeTo(window_size_width, window_size_height);
+				
+				stream.Close();
 			}
 			load_setting();
 			
@@ -521,6 +519,8 @@
 					}
 				};
 				
+				stream.Close();
+				
 				var play_list_file_name = get_file_name(this.value);
 				document.getElementById("play_list_title").value = play_list_file_name.slice(0, ".sarp".length * -1);
 				
@@ -607,7 +607,7 @@
 				
 				var active_row = document.querySelectorAll(".play_list tbody tr.active")[0];
 				var prev_row_index = null;
-				if (active_row) {
+				if (active_row && 1 < play_list.length) {
 					active_row_index = [].indexOf.call(play_list, active_row);
 					
 					if (document.getElementById("is_random_play").checked) {
@@ -640,7 +640,7 @@
 				
 				var active_row = document.querySelectorAll(".play_list tbody tr.active")[0];
 				var next_row_index = null;
-				if (active_row) {
+				if (active_row && 1 < play_list.length) {
 					active_row_index = [].indexOf.call(play_list, active_row);
 					
 					if (document.getElementById("is_random_play").checked) {
