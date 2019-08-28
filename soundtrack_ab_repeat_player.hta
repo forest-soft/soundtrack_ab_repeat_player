@@ -334,6 +334,10 @@
 			}
 			
 			function load_setting() {
+				var window_size_width = 1200;
+				var window_size_height = 600;
+				window.resizeTo(window_size_width, window_size_height);
+				
 				if (fso == null) {
 					console.log("読み込みに失敗しました。(Error:1)");
 					return false;
